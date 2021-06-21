@@ -8,10 +8,6 @@ load.project()
 # Subsetting only the RAW attributes
 Q4_2020_data_processed = Q4_2020_data_processed[,1:25]
 
-# Since some of the hard disk drive experience failure at the first day of Q4,
-# try adding the last 10 days of Q3 data. However, we might need to be careful 
-# since the data from Q3 has different S.M.A.R.T attributes number than that of 
-# the Q4
 
 # Removing unnecessary load on the computer memory
 gc()
@@ -93,6 +89,8 @@ check_data = ST4000DM000_Last10DaysData[ST4000DM000_Last10DaysData$serial_number
 # Cache the 10 days data set for future analyses
 
 cache("ST4000DM000_Last10DaysData")
+
+
 
 # RNN modelling
 # Use the library Keras for creating the RNN model
