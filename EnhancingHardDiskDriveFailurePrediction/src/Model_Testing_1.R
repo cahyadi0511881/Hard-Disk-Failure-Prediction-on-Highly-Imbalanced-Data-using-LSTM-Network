@@ -221,14 +221,65 @@ randomForestImportance = randomForestModel2$importance
 
 randomForestImportanceSD = randomForestModel2$importanceSD
 
+# Create an MCC function that would be used to evaluate models
 MCC = function(TP,TN,FP,FN){
   MCC_score = (TP*TN - FP*FN) / sqrt((TP+FN)*(TP+FP)*(TN+FP)*(TN+FN))
   return(MCC_score)
 }
 
+# MCC for the first random forest model (Without changing the failure condition
+# for failed hard disk to 1 for all observations)
 MCC(151530,633,0,7)
 
+# MCC for the second random forest model (After changing the failure condition 
+# for failed hard disk to 1 for all observations)
 MCC(152105,0,1,64)
+
+# The random forest classifier used the date as the most important feature,
+# therefore try to change the date into days instead ranging from 1-10 
+
+ST4000DM000_Last10DaysData_transformed_2 = data.frame()
+
+for (i in unique(ST4000DM000_Last10DaysData$serial_number)){
+  
+  tempDataStorage = data.frame()
+  tempDataStorage = filter(ST4000DM000_Last10DaysData, serial_number == i )
+  
+  if(tempDataStorage[10,5] == 1){
+    
+    tempDataStorage$failure = 1
+    
+  }
+  
+  tempDataStorage = tempDataStorage[order(tempDataStorage$date),]
+  tempDataStorage$day = c(1:10)
+  
+  ST4000DM000_Last10DaysData_transformed_2 = rbind(ST4000DM000_Last10DaysData_transformed_2, tempDataStorage)
+  
+}
+
+ST4000DM000_Last10DaysData_transformed$failure_2 = as.factor(ST4000DM000_Last10DaysData_transformed_2$failure)
+
+# Separate into training and test
+
+training_transformed_2 = filter(ST4000DM000_Last10DaysData_transformed_2, 
+                              serial_number %in% unique(training_ST4000DM000$serial_number))
+
+
+test_transformed_2 = filter(ST4000DM000_Last10DaysData_transformed_2, 
+                          serial_number %in% unique(test_ST4000DM000$serial_number))
+
+randomForestModel3 = randomForest(x = training_transformed_2[, -c(1,5)],
+                                  y = training_transformed_2[,5], xtest = test_transformed_2[,-c(1,5)], 
+                                  ytest = test_transformed_2[,5], importance = TRUE, ntree = 500)
+
+MCC(620,15130,0,20)
+
+# Check whether there is a similar serial number in test and training set
+
+similarSerial_number = filter(training_transformed_2, serial_number %in% unique(test_transformed_2$serial_number))
+
+# There are no double serial number
 
 # RNN modelling
 # Use the library Keras for creating the RNN model
@@ -282,7 +333,7 @@ set.seed(123)
 
 # Set the model
 
-
+?keras_
 
 model <- keras_model_sequential()
 
