@@ -157,3 +157,13 @@ ST12000NM001GData = subset(RAWAttributesOnly, RAWAttributesOnly$model == "ST1200
 
 # PCA for ST12000NM001G Model
 PCA_ST12000NM001G = prcomp(ST12000NM001GData[,4:25], scale = TRUE)
+
+
+# Get only the ST models 
+
+check_data_frame = Q4_combined_data[grep(pattern = "^ST", Q4_combined_data$model), ]
+
+summary(check_data_frame)
+      
+
+test_na = check_data_frame[is.na(check_data_frame$smart_187_raw) == TRUE, ]
