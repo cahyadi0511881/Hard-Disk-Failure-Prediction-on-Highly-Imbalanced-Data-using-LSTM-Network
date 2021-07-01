@@ -12,17 +12,17 @@ library(tidyverse)
 
 # We transform the data to that of a list of lists based on the serial number
 
-training_x = training_transformed_2[ , -c(1,5,26)] %>%
-  group_by(serial_number) %>% nest()
+training_x = training_transformed_2[ , -c(1,5,26)] %>% 
+  group_by(serial_number) %>% nest() 
 
-test_training_data = simplify2array(by(training_transformed_2[,-c(1,5,26)],training_transformed_2[,-c(1,5,26)]$serial_number,as.matrix))
+
+
+training_x_array = simplify2array(by(training_transformed_2[,-c(1,5,26)],training_transformed_2[,-c(1,5,26)]$serial_number,as.matrix))
 # Transform it into array
 training_X_array = split(training_transformed_2[,-c(1,5,26)],training_transformed_2$serial_number)
 
-training_X_array = as.array(training_X_array)
-
-test = as.matrix(training_x)
-dim(test)
+array_df_train_x = simplify2array(training_X_array)
+array_df_train_x = t(array_df_train_x)
 
 training_y = training_transformed_2[ ,c(2,5)] %>%
   group_by(serial_number) %>%

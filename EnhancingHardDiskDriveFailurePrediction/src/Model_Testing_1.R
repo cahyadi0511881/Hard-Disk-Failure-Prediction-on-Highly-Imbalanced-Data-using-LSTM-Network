@@ -227,6 +227,8 @@ MCC = function(TP,TN,FP,FN){
   return(MCC_score)
 }
 
+cache("MCC")
+
 # MCC for the first random forest model (Without changing the failure condition
 # for failed hard disk to 1 for all observations)
 MCC(151530,633,0,7)
@@ -273,7 +275,8 @@ randomForestModel3 = randomForest(x = training_transformed_2[, -c(1,5)],
                                   y = training_transformed_2[,5], xtest = test_transformed_2[,-c(1,5)], 
                                   ytest = test_transformed_2[,5], importance = TRUE, ntree = 500)
 
-MCC(620,15130,0,20)
+
+MCC(623,15130,0,17)
 
 # Check whether there is a similar serial number in test and training set
 
