@@ -10,19 +10,24 @@ library(tidyverse)
 # Transform the existing training and test data set into a 3D array of 
 # (observations, timestamp, variables) format. 
 
-# We transform the data to that of a list of lists based on the serial number
+# We transform the data to that of a list of lists based on the serial number 
+# using nest() command (Option 1)
 
 training_x = training_transformed_2[ , -c(1,5,26)] %>% 
   group_by(serial_number) %>% nest() 
 
 
-
+# Transforming the data into 3D array using simplify2array function (Option 2)
 training_x_array = simplify2array(by(training_transformed_2[,-c(1,5,26)],training_transformed_2[,-c(1,5,26)]$serial_number,as.matrix))
-# Transform it into array
+
+# Transforming data into list of list and then use simplify2array (option 3)
 training_X_array = split(training_transformed_2[,-c(1,5,26)],training_transformed_2$serial_number)
 
 array_df_train_x = simplify2array(training_X_array)
 array_df_train_x = t(array_df_train_x)
+
+
+
 
 training_y = training_transformed_2[ ,c(2,5)] %>%
   group_by(serial_number) %>%
