@@ -101,6 +101,11 @@ Q4_combined_data = rbind(Q3_2020_data_processed, Q4_2020_data_processed)
 
 Q4_combined_data = Q4_combined_data[Q4_combined_data$capacity_bytes > 0, ]
 
+# Update the Q4 data by removing the Dellboss SVD model since there are no 
+# S.M.A.R.T attributes recorded for this particular model
+
+Q4_combined_data = filter(Q4_combined_data, model != "DELLBOSS VD")
+
 cache("Q4_combined_data")
 
 
