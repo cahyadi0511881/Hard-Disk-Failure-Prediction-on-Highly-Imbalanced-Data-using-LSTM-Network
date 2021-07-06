@@ -284,64 +284,32 @@ similarSerial_number = filter(training_transformed_2, serial_number %in% unique(
 
 # There are no double serial number
 
-# RNN modelling
-# Use the library Keras for creating the RNN model
+# Another iteration of random forest
 
-library(keras)
-library(caret)
+# This iteration uses the days as its feature however it wouldn't transform the failure as 1
 
-# We transform the data to that of a list of lists based on the serial number
+ST4000DM000_Last10DaysData_transformed_3 = data.frame()
 
-training_x_transformed = training_transformed[ , -5] %>%
-  group_by(serial_number) %>%
-  nest()
+for (i in unique(ST4000DM000_Last10DaysData$serial_number)){
+  
+  tempDataStorage = data.frame()
+  tempDataStorage = filter(ST4000DM000_Last10DaysData, serial_number == i )
+  
+  
+  tempDataStorage = tempDataStorage[order(tempDataStorage$date),]
+  tempDataStorage$day = c(1:10)
+  
+  ST4000DM000_Last10DaysData_transformed_3 = rbind(ST4000DM000_Last10DaysData_transformed_3, tempDataStorage)
+  
+}
 
-# Transform it into array
-training_X_transformed = array(training_x_transformed$data, dim = c(15217,10,25))
-
-training_y_transformed = training_transformed[ ,c(2,5)] %>%
-  group_by(serial_number) %>%
-  nest()
-
-# Transform it into array
-training_Y_transformed = array(training_y_transformed$data, dim = c(1527,10,1))
-
-# Similar transformation for the test set
-test_x_transformed = test_transformed[ , -5] %>%
-  group_by(serial_number) %>%
-  nest()
-
-# Transform into 3D array
-test_X_transformed = array(test_x_transformed$data, dim = c(3805,10,25))
-
-test_y_transformed = test_transformed[ ,c(2,5)] %>%
-  group_by(serial_number) %>%
-  nest()
-
-# Transform into 3D array
-test_Y_transformed = array(test_y_transformed$data, dim = c(3805,10,1))
+training_transformed_3 = filter(ST4000DM000_Last10DaysData_transformed_3, 
+                                serial_number %in% unique(training_ST4000DM000$serial_number))
 
 
-dim(training_X_transformed)
+test_transformed_3 = filter(ST4000DM000_Last10DaysData_transformed_3, 
+                            serial_number %in% unique(test_ST4000DM000$serial_number))
 
-dim(test_X_transformed)
-
-# set some parameters for our model
-max_len <- 10 # the number of previous examples we'll look at
-batch_size <- 72 # number of sequences to look at at one time during training
-total_epochs <- 100 # how many times we'll look @ the whole dataset while training our model
-
-# set a random seed for reproducability
-set.seed(123)
-
-# Set the model
-
-?keras_
-
-model <- keras_model_sequential()
-
-model %>% 
-  layer_simple_rnn(units = 6)
-
-
-
+randomForestModel4 = randomForest(x = training_transformed_3[, -c(1,5)],
+                                  y = training_transformed_3[,5], xtest = test_transformed_3[,-c(1,5)], 
+                                  ytest = test_transformed_3[,5], importance = TRUE, ntree = 500)

@@ -106,10 +106,9 @@ test_y_test_array_numeric = array(test_y_test_array_numeric, dim=c(3805,1,1))
 model <- keras_model_sequential()
 
 model %>% layer_lstm(input_shape = dim(training_x_test_array)[2:3], units = 100,
-                     return_sequences = TRUE, dropout = 0.25) %>% 
+                     return_sequences = TRUE, dropout = 0.01) %>% 
               layer_lstm(units = 100, return_sequences =  TRUE) %>% 
-                layer_lstm(units = 100, return_sequences = TRUE)  %>%
-                  layer_lstm(units = 50, return_sequences = FALSE) %>%
+                  layer_lstm(units = 10, return_sequences = FALSE) %>%
                     layer_dense(units = dim(training_y_test_array)[2], activation = "sigmoid")
 
 model %>% compile(loss = 'binary_crossentropy', 
@@ -119,14 +118,18 @@ model %>% compile(loss = 'binary_crossentropy',
 trained_model <- model %>% fit(
   x = training_x_test_array_numeric, # sequence we're using for prediction 
   y = training_y_test_array_numeric, # sequence we're predicting
-  batch_size = 100, # how many samples to pass to our model at a time
-  epochs = 50, # how many times we'll look @ the whole dataset
-  validation_split = 0.25) # how much data to hold out for testing as we go along
+  batch_size = 5, # how many samples to pass to our model at a time
+  epochs = 10, # how many times we'll look @ the whole dataset
+  validation_split = 0.25, # how much data to hold out for testing as we go along
+  class_weights = list("0" = 1, "1" = 1000))
 
-y_pred <- model %>% predict(training_x_test_array_numeric, batch_size = 100) 
+y_pred_2 <- model %>% predict(training_x_test_array_numeric, batch_size = 10) 
 
-y_pred = ifelse(y_pred > 0.5, 1, 0)
+y_pred = ifelse(y_pred_2 > 0.5, 1, 0)
 
-?predict
+
 
 table(training_y_test_array_numeric, y_pred)
+
+
+
