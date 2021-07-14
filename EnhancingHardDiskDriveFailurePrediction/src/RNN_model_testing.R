@@ -8,7 +8,6 @@ library(kerasR)
 library(caret)
 library(tidyverse)
 library(tensorflow)
-use_condaenv("keras-tf", required = T)
 
 # Transform the existing training and test data set into a 3D array of 
 # (observations, timestamp, variables) format. 
@@ -101,35 +100,36 @@ test_y_test_array_numeric = as.numeric(test_y_test_array)
 test_y_test_array_numeric = array(test_y_test_array_numeric, dim=c(3805,1,1))
 
 # Set up the model for the RNN
-
+input_shape_ = dim(training_x_test_array_numeric)[2:3]
 
 model <- keras_model_sequential()
 
-model %>% layer_lstm(input_shape = dim(training_x_test_array)[2:3], units = 100,
+model %>% layer_lstm(input_shape = input_shape_, units = 100,
                      return_sequences = TRUE, dropout = 0.01) %>% 
               layer_lstm(units = 100, return_sequences =  TRUE) %>% 
-                  layer_lstm(units = 10, return_sequences = FALSE) %>%
-                    layer_dense(units = dim(training_y_test_array)[2], activation = "sigmoid")
+              layer_lstm(units = 100, return_sequences =  TRUE) %>% 
+              layer_lstm(units = 50, return_sequences = FALSE) %>%
+                    layer_dense(units = dim(training_y_test_array_numeric)[2], activation = "sigmoid")
 
 model %>% compile(loss = 'binary_crossentropy', 
                   optimizer = 'Adam', 
-                  metrics = c('accuracy'))
+                  metrics = c('accuracy'),
+                  sample_weight_mode = 'temporal')
 
 trained_model <- model %>% fit(
   x = training_x_test_array_numeric, # sequence we're using for prediction 
   y = training_y_test_array_numeric, # sequence we're predicting
-  batch_size = 5, # how many samples to pass to our model at a time
-  epochs = 10, # how many times we'll look @ the whole dataset
-  validation_split = 0.25, # how much data to hold out for testing as we go along
-  class_weights = list("0" = 1, "1" = 1000))
+  batch_size = 72, # how many samples to pass to our model at a time
+  epochs = 100, # how many times we'll look @ the whole dataset
+  validation_split = 0.25) # how much data to hold out for testing as we go along
 
-y_pred_2 <- model %>% predict(training_x_test_array_numeric, batch_size = 10) 
+y_pred_2 <- model %>% predict(test_x_test_array_numeric) 
 
 y_pred = ifelse(y_pred_2 > 0.5, 1, 0)
 
 
 
-table(training_y_test_array_numeric, y_pred)
+table(test_y_test_array_numeric, y_pred)
 
 
 
