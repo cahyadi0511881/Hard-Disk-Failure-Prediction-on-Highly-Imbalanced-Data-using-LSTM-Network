@@ -109,4 +109,21 @@ Q4_combined_data = filter(Q4_combined_data, model != "DELLBOSS VD")
 cache("Q4_combined_data")
 
 
+# Increase the sample size of the failed data for the ST4000DM000 model
 
+# First combine all 4 Quarter of 2020 data
+
+# Take only raw attributes for Q4 2020 Data
+Q4_2020_data_processed = Q4_2020_data_processed[,1:25]
+
+Q4_ST4000DM000 = filter(Q4_2020_data_processed, model == "ST4000DM000")
+
+
+# Combine all the ST4000DM000 data
+
+All_2020_ST4000DM000 = rbind(Q1_ST4000DM000,Q2_ST4000DM000,Q3_ST4000DM000,Q4_ST4000DM000)
+
+# Cache the data set for future use
+cache('All_2020_ST4000DM000')
+
+failed_ST4000DM000 = filter(All_2020_ST4000DM000, failure == 1)
