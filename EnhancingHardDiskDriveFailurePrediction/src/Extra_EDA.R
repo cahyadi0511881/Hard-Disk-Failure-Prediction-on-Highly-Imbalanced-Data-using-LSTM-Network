@@ -28,4 +28,13 @@ smart_4_na = Q4_combined_data[is.na(Q4_combined_data$smart_4_raw) == TRUE, ]
 
 failed_data = filter(Q4_combined_data, serial_number %in% unique(Q4_2020_data_processed$serial_number) & failure == 1)
 
-table(failed_data$model)
+# Get the month variable
+
+# Check the 
+
+# Check correlation
+correlation_20_SMART = cor(All_2020_ST4000DM000[,5:25])
+
+correlation_20_SMART
+
+cor(scaled_data[,5:25])

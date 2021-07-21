@@ -95,6 +95,7 @@ slice_days = function(dataframe){
   
 }
 
+cache('slice_days')
 
 # Now test the function
 
