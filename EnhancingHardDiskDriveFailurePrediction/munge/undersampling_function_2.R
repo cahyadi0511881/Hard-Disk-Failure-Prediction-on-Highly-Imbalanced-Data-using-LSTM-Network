@@ -54,7 +54,7 @@ prediction_days_processing = function(dataframe,observation_days,prediction_days
     # As the LSTM required a fix amount of sequence per input, we would subset
     # each hard disk observations to a certain desired length
     
-    iteration_failed_data = tail(failed_data, n = observation_days + 1)
+    iteration_failed_data = tail(temp_failed_data, n = observation_days + 1)
     
     # As Making Disk Failure Prediction SMARTer paper mentioned that they don't take the 
     # observations when the hard disk itself failed, we only take the number of observations
@@ -73,18 +73,14 @@ prediction_days_processing = function(dataframe,observation_days,prediction_days
   
   # Now moving on to processing the healthy disk data
   
-  # This function will use undersampling therefore we only take the same amount of
-  # healthy sample as the failed sample
-  
-  non_failed_sampled_serial_number = sample(non_failed_hard_disk_serial_number, 
-                                            size = length(unique(failed_data_processed$serial_number)))
+
   
   # Again with the same step as the failed data
   
   # Set up the final processed data frame
   non_failed_processed = data.frame()
   
-  for (s in non_failed_sampled_serial_number){
+  for (s in non_failed_hard_disk_serial_number){
     
     # Set up the temporary data frame within the loop that would refresh at 
     # every start of the loop
@@ -113,10 +109,23 @@ prediction_days_processing = function(dataframe,observation_days,prediction_days
     
   }
   
-  # Combine the failed and non failed data
-  undersampled_data_2nd = rbind(failed_data_processed, non_failed_processed)
+  # This function will use undersampling therefore we only take the same amount of
+  # healthy sample as the failed sample
   
-  return(undersampled_data_2nd)
+  non_failed_sampled_serial_number = sample(unique(non_failed_processed$serial_number) , 
+                                            size = length(unique(failed_data_processed$serial_number)))
+  
+  sampled_healthy_data = filter(non_failed_processed, serial_number %in% non_failed_sampled_serial_number)
+  
+  # For undersampling the healthy sample
+  
+  
+  # Combine the failed and non failed data
+  undersampled_data_2nd = rbind(failed_data_processed, sampled_healthy_data)
+  
+  list_returned = list(undersampled_data_2nd,failed_data_processed,sampled_healthy_data)
+  
+  return(failed_data_processed)
   
 }
 
