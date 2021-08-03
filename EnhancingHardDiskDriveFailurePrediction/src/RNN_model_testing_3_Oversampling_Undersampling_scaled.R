@@ -88,7 +88,7 @@ training_x = training_data_3[ , -c(5)] %>%
   group_by(serial_number) %>% nest() 
 
 # Transforming the data into 3D array using simplify2array function (Option 2)
-training_x_array = simplify2array(by(training_data_3[,-c(1,3,5,6,7,12)],training_data_3[,-c(1,3,5,6,7,12)]$serial_number,as.matrix))
+training_x_array = simplify2array(by(training_data_3[,-c(1,3,5,7,12)],training_data_3[,-c(1,3,5,7,12)]$serial_number,as.matrix))
 
 # Remove the serial number as one of the variable
 training_x_array = training_x_array[,-1,]
@@ -99,7 +99,7 @@ training_x_test_array = aperm(training_x_array,c(3,1,2))
 # Change it into numeric
 training_x_test_array_numeric = as.numeric(training_x_test_array)
 
-training_x_test_array_numeric = array(training_x_test_array_numeric, dim= c(nrow(training_x),10,21))
+training_x_test_array_numeric = array(training_x_test_array_numeric, dim= c(nrow(training_x),10,19))
 
 # For the y or target variable
 # Now to set the target variable (y) into array
@@ -124,7 +124,7 @@ training_y_test_array_numeric = array(training_y_test_array_numeric, dim=c(nrow(
 
 
 # Now for the test data we use the Q4 2019 ST4000DM000 model to be predicted
-Q4_2019_serial_number = unique(Q4_2019_ST4000DM000$serial_number)
+Q4_2019_serial_number = unique(scaled_test$serial_number)
 
 # Again the loop to get the last 10 days of each serial number
 
@@ -173,7 +173,7 @@ test_x_transformed = Q4_2019_Last_10Days_Processed[ , -5] %>%
   nest()
 
 # Transform into 3D array
-test_x_array = simplify2array(by(Q4_2019_Last_10Days_Processed[,-c(1,3,5,6,7,12)],Q4_2019_Last_10Days_Processed[,-c(1,3,5,6,7,12)]$serial_number, as.matrix))
+test_x_array = simplify2array(by(Q4_2019_Last_10Days_Processed[,-c(1,3,5,7,12)],Q4_2019_Last_10Days_Processed[,-c(1,3,5,7,12)]$serial_number, as.matrix))
 
 # Remove the serial number from variables
 test_x_array = test_x_array[,-1,]
@@ -185,7 +185,7 @@ test_x_test_array = aperm(test_x_array,c(3,1,2))
 
 test_x_test_array_numeric = as.numeric(test_x_test_array)
 
-test_x_test_array_numeric = array(test_x_test_array_numeric, dim=c(nrow(test_x_transformed),10,21))
+test_x_test_array_numeric = array(test_x_test_array_numeric, dim=c(nrow(test_x_transformed),10,19))
 
 # Now for the target variable
 
@@ -220,21 +220,23 @@ set.seed(123)
 
 model <- keras_model_sequential()
 
-model %>% layer_lstm(input_shape = dim(training_x_test_array_numeric)[2:3], units = 21,
-                     return_sequences = TRUE, dropout = 0.25) %>% 
-  layer_lstm(units = 10, return_sequences = FALSE) %>%
+model %>% layer_lstm(input_shape = dim(training_x_test_array_numeric)[2:3], units = 210,
+                     return_sequences = TRUE) %>% 
+  layer_dropout(rate = 0.01) %>%
+  layer_lstm(units = 50, return_sequences = FALSE ) %>%
   layer_dense(units = 1, activation = "sigmoid") 
   
 model %>% compile(loss = 'binary_crossentropy', 
-                  optimizer = "adam", 
+                  optimizer = 'adam', 
                   metrics = c('accuracy'))
 
 trained_model <- model %>% fit(
   x = training_x_test_array_numeric, # Predictors sequence
   y = training_y_test_array_numeric, # Target sequence
-  batch_size = 50, # How many samples passed into the data at once
+  batch_size = 10, # How many samples passed into the data at once
   epochs = 20, # Number of times the model look at the data
-  validation_split = 0.25)# Splitting the data into validation set
+  validation_split = 0.25, # Splitting the data into validation set
+  shuffle = FALSE)
 
 y_pred_2 <- model %>% predict(test_x_test_array_numeric) 
 

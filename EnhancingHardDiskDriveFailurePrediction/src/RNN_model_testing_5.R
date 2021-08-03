@@ -1,11 +1,10 @@
+# Testing different length of observations
 library(ProjectTemplate)
 load.project()
-# Testing the new function 
-
-training_data_test = prediction_days_processing_normal(All_2020_ST4000DM000, 100, 10)
+# Produce the training data set
+training_data_test = prediction_days_processing_undersampled_x4(All_2020_ST4000DM000,100,10)
 
 training_data_test_scaled = training_data_test %>% mutate_at(c(6,8:11,13:25),funs(c(scale(.))))
-
 
 # Convert to arrray
 
@@ -28,14 +27,14 @@ training_x_test_array_numeric = array(training_x_test_array_numeric, dim= c(nrow
 
 # For the y or target variable
 # Now to set the target variable (y) into array
-training_y_serial = training_data_test_scaled[,c(2,5)] %>%
+training_y_serial = training_data_test[,c(2,5)] %>%
   group_by(serial_number)
 
 # Only selecting the unique value of the target variable. Meaning only 1 output per
 # serial number
 training_y_serial = unique(training_y_serial)
 
-training_y_serial_pre_array = simplify2array(by(training_y_serial,unique(training_data_test_scaled$serial_number), as.matrix))
+training_y_serial_pre_array = simplify2array(by(training_y_serial,unique(training_data_test$serial_number), as.matrix))
 
 
 training_y_array = array(training_y_serial_pre_array[,-1,], dim=c(1,1,nrow(training_y_serial)))
@@ -45,6 +44,8 @@ training_y_test_array = aperm(training_y_array,c(3,1,2))
 training_y_test_array_numeric = as.numeric(training_y_test_array)
 
 training_y_test_array_numeric = array(training_y_test_array_numeric, dim=c(nrow(training_y_serial),1,1))
+
+
 
 # Use the same test data as previous tests
 
@@ -95,6 +96,7 @@ test_y_test_array_numeric = as.numeric(test_y_test_array)
 
 test_y_test_array_numeric = array(test_y_test_array_numeric, dim=c(nrow(test_y_serial),1,1))
 
+
 # Load the Keras library
 library(keras)
 library(kerasR)
@@ -109,12 +111,12 @@ model <- keras_model_sequential()
 model %>% layer_lstm(input_shape = dim(training_x_test_array_numeric[2:3]),
                      units = 100, return_sequences = TRUE) %>%
   layer_dropout(rate=0.25) %>%
-  layer_lstm(units = 100,return_sequences = TRUE) %>%
-  layer_lstm(units = 50 , return_sequences = FALSE) %>%
+  layer_lstm(units = 100, return_sequences = TRUE) %>%
+  layer_lstm(units=50, return_sequences = FALSE) %>%
   layer_dense(1,activation = "sigmoid") 
 
 model %>% compile(loss = 'binary_crossentropy', 
-                  optimizer = 'adam', 
+                  optimizer = optimizer_adam(lr=0.001), 
                   metrics = c('accuracy'))
 
 trained_model <- model %>% fit(
@@ -129,16 +131,4 @@ y_pred_2 <- model %>% predict(test_x_test_array_numeric)
 y_pred = ifelse(y_pred_2 > 0.5, 1, 0)
 
 table(test_y_test_array_numeric, y_pred)
-
-
-
-
-# Caching the data for further use
-
-normal_training_data = training_data_test
-cache('normal_training_data')
-normal_training_data_scaled = training_data_test_scaled
-cache('normal_training_data_scaled')
-
-
 
