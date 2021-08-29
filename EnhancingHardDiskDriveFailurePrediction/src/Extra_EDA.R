@@ -38,3 +38,6 @@ correlation_20_SMART = cor(All_2020_ST4000DM000[,5:25])
 correlation_20_SMART
 
 cor(scaled_data[,5:25])
+
+
+Failed_total = filter(All_2020_ST4000DM000, failure == 1)
