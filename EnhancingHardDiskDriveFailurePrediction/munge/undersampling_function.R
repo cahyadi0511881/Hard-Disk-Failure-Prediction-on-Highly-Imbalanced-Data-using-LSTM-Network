@@ -1,85 +1,134 @@
-# Undersampling 
+# Undersampling function iteration number 2
 
-slice_days_under = function(dataframe){
+# This undersampling function does not take the last 10 days instead it would take
+# longer observation
+
+prediction_days_processing = function(dataframe,observation_days,prediction_days){
   
-  # Separate the dataframe into Failed and Healthy disk
+  # First subset the failed data
+  failed_hard_disk = filter(dataframe, failure == 1)
+  # Extract the serial numbers of the failed hard disk
+  failed_hard_disk_serial_number = unique(failed_hard_disk$serial_number)
   
-  # Find the hard disk that experience failure
-  failed_hardDisk = filter(dataframe, failure == 1)
+  # Get the data frame that contains all the hard disk which eventually will fail
+  failed_data = filter(dataframe, serial_number %in% failed_hard_disk_serial_number)
   
-  # Extract the serial number
-  failed_hardDisk_serialNumber = unique(failed_hardDisk$serial_number)
+  # Convert the failure status as factor then change it to 1
+  failed_data$failure = as.factor(failed_data$failure)
+  failed_data$failure = 1
   
-  # Subset the main data frame that contains only the failed hard disk serial numbers
-  failed_Data = filter(dataframe, serial_number %in% failed_hardDisk_serialNumber)
   
-  # Now for the healthy data
-  non_failed_Data = filter(dataframe, !(serial_number %in% failed_hardDisk_serialNumber))
-  non_failed_serial = unique(non_failed_Data$serial_number)
+  # Get the healthy hard disk serial numbers
+  non_failed_hard_disk_data = filter(dataframe, !(serial_number %in% failed_hard_disk_serial_number))
+  non_failed_hard_disk_serial_number = unique(non_failed_hard_disk_data$serial_number)
   
-  # Processed the data by looping and analysing per serial numbers. These process
-  # would be done to the healthy data and the failed data separately
+  # Change the failure variable as factor for the healthy hard disk data
+  non_failed_hard_disk_data$failure = as.factor(non_failed_hard_disk_data$failure)
   
+  # Processed the failed data depending on the length of desired observations and
+  # the prediction windows. The processing is done via looping the serial numbers
+  
+  # Set up the final data frame of the loop
   failed_data_processed = data.frame()
-  for (i in failed_hardDisk_serialNumber){
+  
+  for (i in failed_hard_disk_serial_number ){
     
-    tempDataStorage = data.frame()
-    iterationDataStorage = data.frame()
+    # Set up the temporary data in the loop that would be refreshed at the start
+    # of the loop
+    temp_failed_data = data.frame()
+    
+    iteration_failed_data = data.frame()  # The final data frame of the current loop
+                                          # that would be combined into the final data frame
     
     # Subset per serial number
-    tempDataStorage = filter(failed_Data, serial_number == i) 
+    temp_failed_data = filter(failed_data, serial_number == i)
     
-    # Set the failure status as 1 to define that the hard disk experience failure at the end
-    tempDataStorage$failure = 1
-    tempDataStorage$failure = as.factor(tempDataStorage$failure)
-    
-    if ( nrow(tempDataStorage) < 11){
+    # Remove any serial hard disk that does not have enough length of observations
+    if (nrow(temp_failed_data) < observation_days){
       
       next
       
     }
     
-    iterationDataStorage = tail(tempDataStorage, n = 11)
-    iterationDataStorage = head(iterationDataStorage, n = 10)
     
-    failed_data_processed = rbind(failed_data_processed, iterationDataStorage)
+    # As the LSTM required a fix amount of sequence per input, we would subset
+    # each hard disk observations to a certain desired length
+    
+    iteration_failed_data = tail(temp_failed_data, n = observation_days + 1)
+    
+    # As Making Disk Failure Prediction SMARTer paper mentioned that they don't take the 
+    # observations when the hard disk itself failed, we only take the number of observations
+    # before the exact failure time
+    iteration_failed_data = head(iteration_failed_data, n = observation_days)
+    
+    # Now subset it further by the amount of how many days before failure occurs
+    # the data will hold the information
+    
+    iteration_failed_data = head(iteration_failed_data, n = observation_days - prediction_days)
+    
+    # Now we combined the dataframe into the final data frame using rbind function
+    failed_data_processed = rbind(failed_data_processed, iteration_failed_data)
+    
   }
   
+  # Now moving on to processing the healthy disk data
+  
+  # Sampled the healthy hard disk serial number to alleviate some of the burden
+  non_failed_hard_disk_serial_number = sample(non_failed_hard_disk_serial_number, size = 1000)
+
+  
+  # Again with the same step as the failed data
+  
+  # Set up the final processed data frame
   non_failed_processed = data.frame()
   
-  for(n in non_failed_serial){
+  for (s in non_failed_hard_disk_serial_number){
     
-    tempData_nonfailed_storage = data.frame()
-    iteration_nonfailed_storage = data.frame()
+    # Set up the temporary data frame within the loop that would refresh at 
+    # every start of the loop
+    temp_non_failed_data      = data.frame()
+    iteration_non_failed_data = data.frame()
     
-    # Subset per serial_number
-    tempData_nonfailed_storage = filter(non_failed_Data, serial_number == n)
+    # Subset per serial number 
+    temp_non_failed_data = filter(non_failed_hard_disk_data, serial_number == s)
     
-    # Set the failure status as factor
-    tempData_nonfailed_storage$failure = as.factor(tempData_nonfailed_storage$failure)
-    
-    if (nrow(tempData_nonfailed_storage) < 10){
+    # Remove any serial hard disk that does not have enough length of observations
+    if (nrow(temp_non_failed_data) < observation_days){
       
       next
       
     }
     
-    iteration_nonfailed_storage = tail(tempData_nonfailed_storage, n = 10)
+    # We get the last n days of observations for the particular hard disk
+    iteration_non_failed_data = tail(temp_non_failed_data, n = observation_days)
+    # We subtract the observations day to n days before the verdict (healthy or failed) 
+    # or the last observation days
+    iteration_non_failed_data = head(iteration_non_failed_data, n = observation_days - prediction_days)
     
-    # Rbind the data
-    non_failed_processed = rbind(non_failed_processed, iteration_nonfailed_storage)
+    # Combine everything at the final data frame
+    
+    non_failed_processed = rbind(non_failed_processed, iteration_non_failed_data)
     
   }
   
+  # This function will use undersampling therefore we only take the same amount of
+  # healthy sample as the failed sample
   
-  non_failed_equal_serial_number = sample(unique(non_failed_Data$serial_number), size = length(unique(failed_data_processed$serial_number)))
-  non_failed_data_sampled = filter(non_failed_processed, serial_number %in% non_failed_equal_serial_number)
+  non_failed_sampled_serial_number = sample(unique(non_failed_processed$serial_number) , 
+                                            size = length(unique(failed_data_processed$serial_number)))
+  
+  sampled_healthy_data = filter(non_failed_processed, serial_number %in% non_failed_sampled_serial_number)
+  
+  # For undersampling the healthy sample
+  
   
   # Combine the failed and non failed data
-  undersampled_data = rbind(failed_data_processed,non_failed_data_sampled)
+  undersampled_data_2nd = rbind(failed_data_processed, sampled_healthy_data)
   
+  list_returned = list(undersampled_data_2nd,failed_data_processed,sampled_healthy_data)
   
-  return(undersampled_data)
+  return(undersampled_data_2nd)
+  
 }
 
-cache('slice_days_under')
+cache('prediction_days_processing')
