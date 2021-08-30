@@ -74,7 +74,7 @@ prediction_days_processing_undersampling = function(dataframe,observation_days,p
   # Now moving on to processing the healthy disk data
   
   # Sampled the healthy hard disk serial number to alleviate some of the burden
-  non_failed_hard_disk_serial_number = sample(non_failed_hard_disk_serial_number, size = length(unique(failed_data_processed$serial_number)))
+  non_failed_hard_disk_serial_number = sample(non_failed_hard_disk_serial_number, size = 1000)
 
   
   # Again with the same step as the failed data

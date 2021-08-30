@@ -10,7 +10,7 @@ load.project()
 # Provide the data for normal undersampling first
 training_oversampled_failed_raw = prediction_days_processing_normal(All_2020_ST4000DM000,100,10)
 
-# First, we take the serial number of all hard disk that experience failuyre
+# First, we take the serial number of all hard disk that experience failure
 training_oversampled_failed_raw = filter(normal_training_data_scaled, failure == 1 )
 
 # Get the serial number
@@ -33,9 +33,9 @@ for ( i in 1:95){
   
 }
 
-
+# Get the healthy hard disk sample
 non_failed_oversampled = filter(normal_training_data_scaled, !(serial_number %in% failed_training_serial_number) )
-
+# Combined the oversampled failed hard disk samples with the healthy hard disk samples
 training_oversampled = rbind(failed_oversampled_copied,non_failed_oversampled)
 
 # Apply the similar procedure as the RNN model testing file
