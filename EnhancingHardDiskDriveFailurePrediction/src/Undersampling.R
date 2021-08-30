@@ -2,7 +2,7 @@ library(ProjectTemplate)
 load.project()
 # Testing the new function 
 
-training_data_test = prediction_days_processing(All_2020_ST4000DM000, 100, 10)
+training_data_test = prediction_days_processing_undersampling(All_2020_ST4000DM000, 100, 10)
 
 training_data_test_scaled = training_data_test %>% mutate_at(c(6,8:11,13:25),funs(c(scale(.))))
 
