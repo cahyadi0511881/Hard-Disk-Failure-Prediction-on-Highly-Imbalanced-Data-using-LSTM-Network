@@ -1,4 +1,4 @@
-# Enhancing The Enhanced Failure Prediction
+# Hard Disk Failure Prediction on Highly Imbalanced Data Using LSTM Network
   
 ## Introduction 
 
