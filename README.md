@@ -11,5 +11,5 @@
 Steps Required to Run the Analyses:  
   * Run project template
   * Run the analyses files in src folder. Select the sampling methods used based on the files. Use Normal for using raw data
-  # All the necessary functions and its description are listed in the munge files. Munge files also contained the necessary initial eda performed in this project
+  * All the necessary functions and its description are listed in the munge files. Munge files also contained the necessary initial eda performed in this project
   * Modify the desired observations length as the function is made to take into consideration (observation windows and prediction window)
