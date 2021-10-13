@@ -1,4 +1,7 @@
 # Hard Disk Failure Prediction on Highly Imbalanced Data Using LSTM Network
+
+## Abstract  
+<p align="justify">The recent increase in demand for data storage systems has subsequently led to the increase in the number of hard disks failure prediction works in this field. Although most of the existing works in this area have succeeded in achieving a good prediction accuracy, some of them utilize other attributes that are not universally accessible and there is no mention of any methods used to deal with the imbalance nature of the hard disk failure data. Therefore, this project aims to create an accurate prediction method using only the S.M.A.R.T attributes which are highly accessible from an open source such as Backblaze while attempt to mitigate the issues caused by the highly imbalanced data through the implementation of various sampling methods. To achieve these aims, LSTM prediction models are built within an R environment using the Backblaze open-source data as a foundation while also experimenting with various sampling methods to deal with the imbalanced nature of the data set. Evaluating all the potential models using Matthews Correlation Coefficient (MCC) as the evaluation metric, the LSTM model that utilized the partial undersampling method achieved the best score of 0.71. Although this score might appear relatively low compared to other previous works, the emphasis on solving the imbalanced nature of the data combined and providing a more universally applicable model will be beneficial to a wider range of audience.</p>  
   
 ## Introduction 
 
